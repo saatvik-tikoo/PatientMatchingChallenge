@@ -11,6 +11,7 @@ class PatientMatchingCluster:
         self.df = df
 
     def __clean_sex__(self):
+        # Cleans the geneder column
         for i, row in self.df.iterrows():
             if not pd.isna(row['Sex']):
                 self.df.at[i, 'Sex'] = str(row['Sex']).upper()[0]
@@ -18,6 +19,7 @@ class PatientMatchingCluster:
                 self.df.at[i, 'Sex'] = 'U'
 
     def __hashing_names__(self):
+        # Creates a metaphone for First Name and Last Name. We can also use soundex. (That code has been commented below)
         for i, row in self.df.iterrows():
             if not pd.isna(row['First Name']):
                 #  self.df.at[i, 'First Name'] = jellyfish.soundex(row['First Name'])
@@ -31,11 +33,13 @@ class PatientMatchingCluster:
                 self.df.at[i, 'Last Name'] = ''
 
     def __clean_names__(self):
+        # Cleans First Name and Last Name column
         self.df['First Name'] = self.df['First Name'].str.lower()
         self.df['Last Name'] = self.df['Last Name'].str.lower()
         self.__hashing_names__()
 
     def __clean_dates__(self):
+        # Cleans Date column
         for i, row in self.df.iterrows():
             if not pd.isna(row['Date of Birth']):
                 dt = str(row['Date of Birth']).strip().split('/')
@@ -57,6 +61,7 @@ class PatientMatchingCluster:
                 self.df.at[i, 'Date_year'] = ''
 
     def __clean_states__(self):
+        # Cleans States column
         for i, row in self.df.iterrows():
             if not pd.isna(row['Current State']):
                 if str(row['Current State']).lower() in states.us_states:
@@ -65,10 +70,14 @@ class PatientMatchingCluster:
                 self.df.at[i, 'Sex'] = ''
 
     def get_jaccard_similarity(self):
-        # similarity = np.zeros((self.df.shape[0], self.df.shape[0]))
+        """ This is where the magic happens
+            Here we calculate the Jaccard Similarity between each pair of records and
+            then group them based on a threshold value
+        """
+
+        # In further work we can use sets instead of Dataframes to make the computations faster
         # df = self.df.values.tolist()
         # df = [set(row) for row in df]
-        similarity = 0
         cluster = defaultdict(set)
         cluster_number = 1
         columns_clustered = set()
@@ -88,7 +97,6 @@ class PatientMatchingCluster:
                 denominator = len(test_set.union(actual_set))
                 similarity = float(numerator) / denominator
                 if similarity > self.threshold:
-                    flag = 0
                     if i not in columns_clustered and j not in columns_clustered:
                         cluster[cluster_number].add(i)
                         cluster[cluster_number].add(j)
@@ -110,6 +118,7 @@ class PatientMatchingCluster:
         return cluster
 
     def data_clean(self):
+        # For cleaning the data
         self.__clean_sex__()
         self.__clean_names__()
         self.__clean_dates__()
@@ -117,10 +126,12 @@ class PatientMatchingCluster:
         self.df = self.df.fillna('')
 
     def print_groups(self, cluster):
+        # This is for printing the groups and the records in each group
         for k, v in cluster.items():
             print('In group: {} indexes are: {}'.format(k, v))
 
     def get_accuracy(self, calculated_cluster):
+        # Calculate the accuracy of our algorithm
         actual_clusters = defaultdict(set)
         for i, row in self.df.iterrows():
             actual_clusters[row['GroupID']].add(i)
