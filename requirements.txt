@@ -6,7 +6,7 @@ joblib==0.14.1
 kiwisolver==1.1.0
 matplotlib==3.2.1
 Metaphone==0.6
-numpy==1.18.2
+numpy==1.22.0
 openpyxl==3.0.3
 pandas==1.0.3
 pyparsing==2.4.6
